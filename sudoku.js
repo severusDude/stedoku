@@ -223,4 +223,135 @@ class SudokuGame {
 			}
 		}
 	}
+
+	// Export the board as a JSON string
+	exportBoard() {
+		const exportData = {
+			board: this.board,
+			prefilled: this.prefilled,
+			solution: this.solution,
+		};
+		return JSON.stringify(exportData);
+	}
+
+	// Import a board from a JSON string
+	importBoard(jsonString) {
+		try {
+			const importData = JSON.parse(jsonString);
+
+			// Validate the imported data structure
+			if (!this.isValidBoardFormat(importData)) {
+				throw new Error("Invalid board format");
+			}
+
+			this.board = importData.board;
+			this.prefilled = importData.prefilled;
+
+			// Import solution if available
+			if (importData.solution) {
+				this.solution = importData.solution;
+			}
+
+			return true;
+		} catch (error) {
+			console.error("Error importing board:", error);
+			return false;
+		}
+	}
+
+	// Import a board directly from a nested array
+	importBoardFromArray(boardArray) {
+		try {
+			// Validate the board array
+			if (!Array.isArray(boardArray) || boardArray.length !== 9) {
+				throw new Error("Invalid board array: must be 9x9");
+			}
+
+			for (let i = 0; i < 9; i++) {
+				if (!Array.isArray(boardArray[i]) || boardArray[i].length !== 9) {
+					throw new Error(`Invalid row at index ${i}: must have 9 elements`);
+				}
+
+				for (let j = 0; j < 9; j++) {
+					const value = boardArray[i][j];
+					if (!Number.isInteger(value) || value < 0 || value > 9) {
+						throw new Error(
+							`Invalid value at [${i},${j}]: must be integer between 0-9`
+						);
+					}
+				}
+			}
+
+			// Set the board and mark prefilled cells
+			this.board = JSON.parse(JSON.stringify(boardArray));
+			this.prefilled = Array(9)
+				.fill()
+				.map(() => Array(9).fill(false));
+
+			// Mark non-zero cells as prefilled
+			for (let i = 0; i < 9; i++) {
+				for (let j = 0; j < 9; j++) {
+					if (this.board[i][j] !== 0) {
+						this.prefilled[i][j] = true;
+					}
+				}
+			}
+
+			// Try to solve the board to get the solution
+			const solutionBoard = JSON.parse(JSON.stringify(this.board));
+			if (this.solveBoard(solutionBoard)) {
+				this.solution = solutionBoard;
+			} else {
+				throw new Error("The provided board has no solution");
+			}
+
+			return true;
+		} catch (error) {
+			console.error("Error importing board from array:", error);
+			return false;
+		}
+	}
+
+	// Validate the imported board format
+	isValidBoardFormat(data) {
+		// Check if the required properties exist
+		if (!data.board || !data.prefilled) {
+			return false;
+		}
+
+		// Check if board is a 9x9 grid
+		if (!Array.isArray(data.board) || data.board.length !== 9) {
+			return false;
+		}
+
+		// Check if prefilled is a 9x9 grid
+		if (!Array.isArray(data.prefilled) || data.prefilled.length !== 9) {
+			return false;
+		}
+
+		// Check each row of the board
+		for (let i = 0; i < 9; i++) {
+			if (!Array.isArray(data.board[i]) || data.board[i].length !== 9) {
+				return false;
+			}
+
+			if (!Array.isArray(data.prefilled[i]) || data.prefilled[i].length !== 9) {
+				return false;
+			}
+
+			// Check each cell
+			for (let j = 0; j < 9; j++) {
+				const value = data.board[i][j];
+				if (!Number.isInteger(value) || value < 0 || value > 9) {
+					return false;
+				}
+
+				if (typeof data.prefilled[i][j] !== "boolean") {
+					return false;
+				}
+			}
+		}
+
+		return true;
+	}
 }
