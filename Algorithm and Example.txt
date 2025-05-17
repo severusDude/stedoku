@@ -1,0 +1,47 @@
+Encoding Algorithm
+
+Input:
+1. Secret Text
+2. Any publicly available text files as cover text
+
+Steps:
+1. Convert the secret data to equivalent ASCII format A.
+2. Convert the cover text to equivalent sentence matrix S of size N x N where N is the number of words in the longest sentence of the cover text.
+3. Convert the cover text to equivalent matrix in ASCII format R too as a reference of comparison.
+4. Compare R with A in the following method to generate the Sudoku puzzle to be sent to the receiver as a key.
+5.
+(a) Start finding the corresponding match for first ASCII value entry of the secret data in matrix R and if a match is found, then the position of the match in the word is stored in the same mini grid number in S that matches with the sentence number.
+(b) Look for the next match with the next ASCII code in the secret text accordingly.
+(c) If no match is found in a sentence, skip the sentence and the corresponding mini grid and move to the next set.
+(d) If all the mini grids of the sentence matrix S are exhausted before exhaustion of the secret text of ASCII chain A, start second entry in the mini grid following the same method and for the second entries a new shade is used as a base of the new entries.
+(e) The process is carried on until the secret text ASCII chain A is exhausted fully.
+6. The newly generated matrix S is the generated Sudoku puzzle i.e. stego key to be sent to the receiver end along with the chosen cover text.
+
+Output:
+1. Stego Key i.e the generated N x N Sudoku puzzle.
+
+Decoding Algorithm
+
+Input:
+1. Stego Key, Sudoku Puzzle, S
+2. The cover text used in encoding
+
+Steps:
+1. Convert the cover text to reference matrix R by converting it to the ASCII format.
+2. The entries in the Sudoku puzzle are checked in the following procedure to generate the hidden secret text from the cover text.
+3.
+(a) Check the first entry in the first mini grid of the puzzle S.
+(b) The position that matches with that entry is in the first sentence in the word whose position number matches with the cell number of the mini grid.
+(c) The value of the corresponding cell shows the position of the specific ASCII character in the word that is obtained in step (b).
+(d) Move to the next entry in the puzzle S.
+4. All the entries are handled accordingly following the steps in 3 and an ASCII chain is generated.
+5. Now the ASCII chain is converted to alphanumeric form to generate the secret text, send by sender to the intended recipient
+
+Output:
+1. Secret Text
+
+Secret Text
+Short hair
+
+Cover Text
+Having one’s own house is a great blessing of God. One feels good, safe and secure at his home. A house, you know is an important necessity. The quality of life improves when you have a comfortable house of your own. It gives you an opportunity to turn some of your dreams into reality. You decorate your room as per your taste. You look after your garden with trees of fruits
