@@ -3,56 +3,34 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>Sudoku Steganography</title>
+		<title>Sudoku Steganography Demo</title>
 		<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-		<style>
-			.cell-input {
-				width: 100%;
-				height: 100%;
-				text-align: center;
-				font-size: 1.25rem;
-				border: none;
-				outline: none;
-				background: transparent;
-			}
-			.cell-input:focus {
-				background-color: #e5edff;
-			}
-			.prefilled {
-				font-weight: bold;
-				color: #1a365d;
-			}
-			.invalid {
-				background-color: #fed7d7;
-			}
-		</style>
+		<script src="sudoku.js"></script>
+		<script src="steganography-encoder.js"></script>
+		<script src="steganography-decoder.js"></script>
 	</head>
-	<body
-		class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4"
-	>
-		<div class="bg-white rounded-xl shadow-lg p-6 max-w-3xl w-full">
+	<body class="bg-gray-100 min-h-screen p-4">
+		<div class="max-w-4xl mx-auto">
 			<h1 class="text-3xl font-bold text-center text-blue-800 mb-6">
-				Sudoku Steganography
+				Sudoku Steganography Demo
 			</h1>
 
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-				<!-- Left column: Encoding -->
-				<div class="bg-blue-50 p-4 rounded-lg shadow-md">
-					<h2 class="text-xl font-semibold text-blue-700 mb-3">
-						Encode Message
-					</h2>
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+				<!-- Encoder Section -->
+				<div class="bg-white rounded-xl shadow-lg p-6">
+					<h2 class="text-2xl font-bold text-blue-700 mb-4">Encoder</h2>
 
 					<div class="mb-4">
 						<label
-							for="secret-message"
+							for="secret-text"
 							class="block text-sm font-medium text-gray-700 mb-1"
-							>Secret Message:</label
+							>Secret Text</label
 						>
 						<textarea
-							id="secret-message"
-							class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-							rows="4"
-							placeholder="Enter your secret message here..."
+							id="secret-text"
+							class="w-full px-3 py-2 border border-gray-300 rounded-md"
+							rows="3"
+							placeholder="Enter the secret message you want to hide..."
 						></textarea>
 					</div>
 
@@ -60,291 +38,277 @@
 						<label
 							for="cover-text"
 							class="block text-sm font-medium text-gray-700 mb-1"
-							>Cover Text:</label
+							>Cover Text</label
 						>
 						<textarea
 							id="cover-text"
-							class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+							class="w-full px-3 py-2 border border-gray-300 rounded-md"
 							rows="6"
-							placeholder="Enter cover text here... (longer text works better)"
+							placeholder="Enter the cover text that will hide your message..."
 						></textarea>
 					</div>
 
 					<button
 						id="encode-btn"
-						class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md shadow"
+						class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
 					>
-						Encode Message into Sudoku
+						Encode Message
 					</button>
+
+					<div id="stego-key-container" class="mt-4 hidden">
+						<h3 class="text-lg font-semibold text-gray-700 mb-2">
+							Generated Stego Key (Sudoku Puzzle)
+						</h3>
+						<pre
+							id="stego-key-output"
+							class="bg-gray-100 p-4 rounded-md overflow-x-auto"
+						></pre>
+					</div>
 				</div>
 
-				<!-- Right column: Decoding -->
-				<div class="bg-green-50 p-4 rounded-lg shadow-md">
-					<h2 class="text-xl font-semibold text-green-700 mb-3">
-						Decode Message
-					</h2>
+				<!-- Decoder Section -->
+				<div class="bg-white rounded-xl shadow-lg p-6">
+					<h2 class="text-2xl font-bold text-blue-700 mb-4">Decoder</h2>
 
 					<div class="mb-4">
 						<label
-							for="decode-cover-text"
+							for="decoder-cover-text"
 							class="block text-sm font-medium text-gray-700 mb-1"
-							>Cover Text:</label
+							>Cover Text</label
 						>
 						<textarea
-							id="decode-cover-text"
-							class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+							id="decoder-cover-text"
+							class="w-full px-3 py-2 border border-gray-300 rounded-md"
 							rows="6"
-							placeholder="Enter the same cover text used for encoding..."
+							placeholder="Enter the same cover text used during encoding..."
 						></textarea>
 					</div>
 
 					<div class="mb-4">
-						<p class="block text-sm font-medium text-gray-700 mb-1">
-							Sudoku Puzzle (automatically filled from the board below):
-						</p>
-						<p class="text-xs text-gray-500">
-							The current board state will be used for decoding
-						</p>
+						<label
+							for="decoder-stego-key"
+							class="block text-sm font-medium text-gray-700 mb-1"
+							>Stego Key (Sudoku Puzzle)</label
+						>
+						<textarea
+							id="decoder-stego-key"
+							class="w-full px-3 py-2 border border-gray-300 rounded-md font-mono"
+							rows="5"
+							placeholder="Enter the stego key generated during encoding..."
+						></textarea>
 					</div>
 
 					<button
 						id="decode-btn"
-						class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-md shadow"
+						class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
 					>
-						Decode Message from Sudoku
+						Decode Message
 					</button>
 
-					<div class="mt-4">
-						<label
-							for="decoded-message"
-							class="block text-sm font-medium text-gray-700 mb-1"
-							>Decoded Message:</label
-						>
-						<textarea
+					<div id="decoded-message-container" class="mt-4 hidden">
+						<h3 class="text-lg font-semibold text-gray-700 mb-2">
+							Decoded Secret Message
+						</h3>
+						<div
 							id="decoded-message"
-							class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50"
-							rows="4"
-							readonly
-						></textarea>
+							class="bg-gray-100 p-4 rounded-md overflow-x-auto"
+						></div>
 					</div>
 				</div>
 			</div>
 
-			<!-- Sudoku Board -->
-			<div class="mt-8">
-				<h2 class="text-xl font-semibold text-center text-gray-700 mb-4">
-					Sudoku Board
+			<!-- Copy buttons -->
+			<div class="flex justify-center mt-6 space-x-4">
+				<button
+					id="copy-to-decoder"
+					class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+				>
+					Copy Encoder Data to Decoder
+				</button>
+
+				<button
+					id="run-example"
+					class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
+				>
+					Run Example
+				</button>
+			</div>
+
+			<!-- Visual representation -->
+			<div class="mt-8 bg-white rounded-xl shadow-lg p-6">
+				<h2 class="text-2xl font-bold text-blue-700 mb-4">
+					Sudoku Representation of Stego Key
 				</h2>
-				<div class="flex justify-center">
-					<div
-						id="board"
-						class="grid grid-cols-9 gap-0 border-2 border-gray-800"
-					>
-						<!-- Board will be generated by JavaScript -->
-					</div>
-				</div>
-
-				<div class="flex justify-center mt-4 space-x-4">
-					<button
-						id="new-game"
-						class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-					>
-						New Sudoku
-					</button>
-					<button
-						id="clear"
-						class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-					>
-						Clear Board
-					</button>
+				<div
+					id="sudoku-visualization"
+					class="grid grid-cols-9 gap-0 border-2 border-gray-800 mb-6 max-w-md mx-auto"
+				>
+					<!-- Will be populated by JavaScript -->
 				</div>
 			</div>
-
-			<div id="message" class="mt-6 text-center font-medium hidden"></div>
 		</div>
 
-		<script src="sudoku.js"></script>
-		<script src="steganography.js"></script>
 		<script>
 			document.addEventListener("DOMContentLoaded", () => {
-				// Initialize the game and steganography
-				const game = new SudokuGame();
-				const steg = new SudokuSteganography();
+				// Elements
+				const secretTextInput = document.getElementById("secret-text");
+				const coverTextInput = document.getElementById("cover-text");
+				const encodeBtn = document.getElementById("encode-btn");
+				const stegoKeyContainer = document.getElementById(
+					"stego-key-container"
+				);
+				const stegoKeyOutput = document.getElementById("stego-key-output");
 
-				// Generate the board UI
-				const boardElement = document.getElementById("board");
+				const decoderCoverText = document.getElementById("decoder-cover-text");
+				const decoderStegoKey = document.getElementById("decoder-stego-key");
+				const decodeBtn = document.getElementById("decode-btn");
+				const decodedMessageContainer = document.getElementById(
+					"decoded-message-container"
+				);
+				const decodedMessage = document.getElementById("decoded-message");
 
-				for (let row = 0; row < 9; row++) {
-					for (let col = 0; col < 9; col++) {
-						const cell = document.createElement("div");
-						cell.className =
-							"cell w-10 h-10 flex items-center justify-center border border-gray-400";
+				const copyToDecoderBtn = document.getElementById("copy-to-decoder");
+				const runExampleBtn = document.getElementById("run-example");
 
-						// Add thicker borders to separate 3x3 blocks
-						if (col % 3 === 2 && col < 8) {
-							cell.classList.add("border-r-2", "border-r-gray-800");
-						}
-						if (row % 3 === 2 && row < 8) {
-							cell.classList.add("border-b-2", "border-b-gray-800");
-						}
+				const sudokuVisualization = document.getElementById(
+					"sudoku-visualization"
+				);
 
-						const input = document.createElement("input");
-						input.type = "text";
-						input.maxLength = 1;
-						input.dataset.row = row;
-						input.dataset.col = col;
-						input.className = "cell-input";
+				let currentStegoKey = null;
 
-						// Allow only numbers 1-9
-						input.addEventListener("input", (e) => {
-							e.target.value = e.target.value.replace(/[^1-9]/g, "");
-							game.updateCell(
-								row,
-								col,
-								e.target.value ? parseInt(e.target.value) : 0
-							);
-						});
-
-						// Move to next cell on keydown
-						input.addEventListener("keydown", (e) => {
-							if (e.key === "ArrowRight" && col < 8) {
-								document
-									.querySelector(`[data-row="${row}"][data-col="${col + 1}"]`)
-									.focus();
-							} else if (e.key === "ArrowLeft" && col > 0) {
-								document
-									.querySelector(`[data-row="${row}"][data-col="${col - 1}"]`)
-									.focus();
-							} else if (e.key === "ArrowUp" && row > 0) {
-								document
-									.querySelector(`[data-row="${row - 1}"][data-col="${col}"]`)
-									.focus();
-							} else if (e.key === "ArrowDown" && row < 8) {
-								document
-									.querySelector(`[data-row="${row + 1}"][data-col="${col}"]`)
-									.focus();
-							}
-						});
-
-						cell.appendChild(input);
-						boardElement.appendChild(cell);
-					}
-				}
-
-				// Function to update the UI based on the game state
-				function updateBoardUI(game) {
-					const cells = document.querySelectorAll(".cell-input");
-					cells.forEach((cell) => {
-						const row = parseInt(cell.dataset.row);
-						const col = parseInt(cell.dataset.col);
-						const value = game.board[row][col];
-
-						cell.value = value !== 0 ? value : "";
-						cell.classList.toggle("prefilled", game.prefilled[row][col]);
-						cell.disabled = game.prefilled[row][col];
-					});
-				}
-
-				// Start a new game
-				game.newGame("easy");
-				updateBoardUI(game);
-
-				// Event listeners for Sudoku game buttons
-				document.getElementById("new-game").addEventListener("click", () => {
-					game.newGame("medium");
-					updateBoardUI(game);
-					document.getElementById("message").classList.add("hidden");
-				});
-
-				document.getElementById("clear").addEventListener("click", () => {
-					game.clearBoard();
-					updateBoardUI(game);
-					document.getElementById("message").classList.add("hidden");
-				});
-
-				// Encode button functionality
-				document.getElementById("encode-btn").addEventListener("click", () => {
-					const secretText = document.getElementById("secret-message").value;
-					const coverText = document.getElementById("cover-text").value;
+				// Encoder event
+				encodeBtn.addEventListener("click", () => {
+					const secretText = secretTextInput.value.trim();
+					const coverText = coverTextInput.value.trim();
 
 					if (!secretText || !coverText) {
-						const messageEl = document.getElementById("message");
-						messageEl.textContent =
-							"Please enter both secret message and cover text.";
-						messageEl.className = "mt-6 text-center font-medium text-red-600";
-						messageEl.classList.remove("hidden");
+						alert("Please enter both secret text and cover text.");
 						return;
 					}
 
 					try {
-						// Create a new game with the encoded message
-						const stegoGame = steg.createEncodedSudokuGame(
-							secretText,
-							coverText
-						);
+						const encoder = new SteganographyEncoder();
+						currentStegoKey = encoder.encode(secretText, coverText);
 
-						// Update the board
-						game.board = stegoGame.board;
-						game.prefilled = stegoGame.prefilled;
-						game.solution = stegoGame.solution;
+						// Display the stego key
+						// stegoKeyOutput.textContent = encoder.formatStegoKey();
+						stegoKeyContainer.classList.remove("hidden");
 
-						updateBoardUI(game);
-
-						// Copy cover text to the decode side
-						document.getElementById("decode-cover-text").value = coverText;
-
-						// Show success message
-						const messageEl = document.getElementById("message");
-						messageEl.textContent =
-							"Secret message successfully encoded into the Sudoku puzzle!";
-						messageEl.className = "mt-6 text-center font-medium text-green-600";
-						messageEl.classList.remove("hidden");
+						// Update the Sudoku visualization
+						updateSudokuVisualization(currentStegoKey);
 					} catch (error) {
-						const messageEl = document.getElementById("message");
-						messageEl.textContent = "Error encoding message: " + error.message;
-						messageEl.className = "mt-6 text-center font-medium text-red-600";
-						messageEl.classList.remove("hidden");
+						alert("Error encoding: " + error.message);
+						console.error(error);
 					}
 				});
 
-				// Decode button functionality
-				document.getElementById("decode-btn").addEventListener("click", () => {
-					const coverText = document.getElementById("decode-cover-text").value;
+				// Decoder event
+				decodeBtn.addEventListener("click", () => {
+					const coverText = decoderCoverText.value.trim();
+					const stegoKeyText = decoderStegoKey.value.trim();
 
-					if (!coverText) {
-						const messageEl = document.getElementById("message");
-						messageEl.textContent =
-							"Please enter the cover text used for encoding.";
-						messageEl.className = "mt-6 text-center font-medium text-red-600";
-						messageEl.classList.remove("hidden");
+					if (!coverText || !stegoKeyText) {
+						alert("Please enter both cover text and stego key.");
 						return;
 					}
 
 					try {
-						// Get current board state
-						const boardState = game.board;
+						const decoder = new SteganographyDecoder();
+
+						// Parse the stego key text to a 2D array
+						const stegoKey = decoder.parseFormattedStegoKey(stegoKeyText);
 
 						// Decode the message
-						const decodedMessage = steg.decode(boardState, coverText);
+						const secretText = decoder.decode(stegoKey, coverText);
 
 						// Display the decoded message
-						document.getElementById("decoded-message").value = decodedMessage;
+						decodedMessage.textContent = secretText;
+						decodedMessageContainer.classList.remove("hidden");
 
-						// Show success message
-						const messageEl = document.getElementById("message");
-						messageEl.textContent = "Message successfully decoded!";
-						messageEl.className = "mt-6 text-center font-medium text-green-600";
-						messageEl.classList.remove("hidden");
+						// Update the Sudoku visualization
+						updateSudokuVisualization(stegoKey);
 					} catch (error) {
-						const messageEl = document.getElementById("message");
-						messageEl.textContent = "Error decoding message: " + error.message;
-						messageEl.className = "mt-6 text-center font-medium text-red-600";
-						messageEl.classList.remove("hidden");
-
-						// Clear the decoded message area
-						document.getElementById("decoded-message").value = "";
+						alert("Error decoding: " + error.message);
+						console.error(error);
 					}
 				});
+
+				// Copy encoder data to decoder
+				copyToDecoderBtn.addEventListener("click", () => {
+					decoderCoverText.value = coverTextInput.value;
+					decoderStegoKey.value = stegoKeyOutput.textContent;
+				});
+
+				// Run example
+				runExampleBtn.addEventListener("click", () => {
+					const exampleSecretText = "Hello, this is a secret message!";
+					const exampleCoverText =
+						"This is the first sentence of the cover text. Here is the second sentence with some more words. And here is a third one that contains additional text. The fourth sentence completes the example with even more words.";
+
+					secretTextInput.value = exampleSecretText;
+					coverTextInput.value = exampleCoverText;
+
+					// Trigger the encode button
+					encodeBtn.click();
+
+					// Copy to decoder
+					copyToDecoderBtn.click();
+
+					// Trigger the decode button after a short delay
+					setTimeout(() => {
+						decodeBtn.click();
+					}, 100);
+				});
+
+				// Function to update the Sudoku visualization
+				function updateSudokuVisualization(stegoKey) {
+					if (!stegoKey || stegoKey.length === 0) return;
+
+					// Clear previous visualization
+					sudokuVisualization.innerHTML = "";
+
+					// Determine grid size based on the stegoKey
+					const size = stegoKey[0].length;
+					sudokuVisualization.style.gridTemplateColumns = `repeat(${size}, minmax(0, 1fr))`;
+
+					// Create cells
+					for (let row = 0; row < stegoKey.length; row++) {
+						for (let col = 0; col < stegoKey[row].length; col++) {
+							const cell = document.createElement("div");
+							cell.className =
+								"cell w-10 h-10 flex items-center justify-center border border-gray-400";
+
+							// Add thicker borders to separate 3x3 blocks
+							if (size >= 9) {
+								if (col % 3 === 2 && col < size - 1) {
+									cell.classList.add("border-r-2", "border-r-gray-800");
+								}
+								if (row % 3 === 2 && row < size - 1) {
+									cell.classList.add("border-b-2", "border-b-gray-800");
+								}
+							}
+
+							const value = stegoKey[row][col];
+
+							// Different colors for different entry rounds
+							let textColor = "text-gray-800";
+							if (value > 0) {
+								const maxWordLength = 10; // Estimate
+								const entryRound = Math.ceil(value / maxWordLength);
+
+								if (entryRound === 1) textColor = "text-blue-600";
+								else if (entryRound === 2) textColor = "text-green-600";
+								else if (entryRound === 3) textColor = "text-purple-600";
+								else textColor = "text-red-600";
+							}
+
+							cell.innerHTML = `<span class="font-bold ${textColor}">${
+								value || ""
+							}</span>`;
+							sudokuVisualization.appendChild(cell);
+						}
+					}
+				}
 			});
 		</script>
 	</body>
