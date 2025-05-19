@@ -5,6 +5,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Sudoku Game</title>
 		<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+		<script src="steganography-decoder.js"></script>
 		<style>
 			.cell-input {
 				width: 100%;
@@ -313,6 +314,23 @@
 				const manageTab = document.getElementById("manage-tab");
 				const playView = document.getElementById("play-view");
 				const manageView = document.getElementById("manage-view");
+
+				// Elements
+				const secretTextInput = document.getElementById("secret-text");
+				const coverTextInput = document.getElementById("cover-text");
+				const encodeBtn = document.getElementById("encode-btn");
+				const stegoKeyContainer = document.getElementById(
+					"stego-key-container"
+				);
+				const stegoKeyOutput = document.getElementById("stego-key-output");
+
+				const decoderCoverText = document.getElementById("decoder-cover-text");
+				const decoderStegoKey = document.getElementById("decoder-stego-key");
+				const decodeBtn = document.getElementById("decode-btn");
+				const decodedMessageContainer = document.getElementById(
+					"decoded-message-container"
+				);
+				const decodedMessage = document.getElementById("decoded-message");
 
 				playTab.addEventListener("click", () => {
 					playTab.classList.add(
@@ -748,6 +766,35 @@
 							);
 						}
 					});
+
+				// Decoder event
+				decodeBtn.addEventListener("click", () => {
+					const coverText = decoderCoverText.value.trim();
+					const stegoKeyText = JSON.parse(decoderStegoKey.value.trim());
+
+					console.log(stegoKeyText);
+
+					if (!coverText || !stegoKeyText) {
+						alert("Please enter both cover text and stego key.");
+						return;
+					}
+
+					try {
+						const decoder = new SteganographyDecoder();
+
+						// Decode the message
+						const secretText = decoder.decode(stegoKeyText, coverText);
+
+						console.log(secretText);
+
+						// Display the decoded message
+						decodedMessage.textContent = secretText;
+						decodedMessageContainer.classList.remove("hidden");
+					} catch (error) {
+						alert("Error decoding: " + error.message);
+						console.error(error);
+					}
+				});
 			});
 		</script>
 	</body>
