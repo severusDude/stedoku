@@ -1,3 +1,5 @@
+To hide a secret message the proposed method considers a secret data and a publicly available text file as input to the system. The method converts the secret text to its equivalent ASCII format A and the cover text is converted to equivalent sentence matrix S of size N x N, where N is the number of words in the longest sentence of the chosen text. Each node of the generated sentence matrix S contains the information about the corresponding sentence number, word number and the position number of the member ASCII character. Then by comparing the ASCII value of corresponding secret text with the sentence matrix entries, a Sudoku puzzle is generated. The unchanged cover text file and the generated Sudoku puzzle are sent to the intended recipient. For generation of the Sudoku puzzle sentence number of the cover text is matched with mini grid number, corresponding word number of the sentence is matched with node position in the mini grid and the entered value is according to the position of the corresponding ASCII code in that word. N is the length of the longest sentence of the text. For simplicity of implementation a 9  9 Sudoku puzzle is generated and hence forth first 9 words of each sentence is taken into account. The words of length more than 9 are also kept out of consideration.
+
 Encoding Algorithm
 
 Input:
@@ -19,6 +21,8 @@ Steps:
 
 Output:
 1. Stego Key i.e the generated N x N Sudoku puzzle.
+
+Reversely to extract the secret text at the receiver end, first the reference matrix R, containing the corresponding ASCII entries of the characters of the cover text is generated and the received Sudoku puzzle is checked and the entries in the mini grids are taken to pick the ASCII values from R accordingly. After the ASCII chain is generated, it’s again converted to the alphanumeric form to regenerate the secret text at the receiver end.
 
 Decoding Algorithm
 
