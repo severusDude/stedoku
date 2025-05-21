@@ -12,7 +12,7 @@ function preprocessCoverText(text) {
 			.filter((word) => word.length <= 9) // Filter out words longer than 9 characters
 			.slice(0, 9) // Take first 9 words (after filtering)
 			.map((word) => {
-				const padded = word.padEnd(9, "_"); // Ensure 9 characters
+				const padded = word.padEnd(9, " "); // Ensure 9 characters
 				return padded.split("");
 			});
 		return words;
@@ -64,7 +64,7 @@ function getSudokuCoordinates(sentenceIndex, wordIndex) {
 }
 
 function findCharacterMatches(secretText, reference) {
-	const secret = secretText.replaceAll(" ", "").toLowerCase();
+	const secret = secretText.replaceAll(" ", "").toLowerCase() + " ";
 	const matches = {};
 
 	for (const ch of secret) {
@@ -93,7 +93,7 @@ function findCharacterMatches(secretText, reference) {
 }
 
 function generateSudokuFromMatches(secretText, matches) {
-	const secret = secretText.replaceAll(" ", "").toLowerCase();
+	const secret = secretText.toLowerCase();
 	const board = Array.from({ length: 9 }, () => Array(9).fill(0));
 
 	// Convert matches object to an array of characters in secret text order
@@ -179,38 +179,6 @@ function isSafe(board, row, col, value) {
 	return true;
 }
 
-function encodeSecretText(secretText, reference) {
-	const board = Array.from({ length: 9 }, () => Array(9).fill(0));
-	const used = new Set();
-	const secret = secretText.replaceAll(" ", "");
-
-	for (const ch of secret) {
-		let found = false;
-
-		for (let s = 0; s < 9 && !found; s++) {
-			for (let w = 0; w < 9 && !found; w++) {
-				for (let c = 0; c < 9 && !found; c++) {
-					if (ch.toLowerCase() === reference[s][w][c]) {
-						const [row, col] = getSudokuCoordinates(s, w);
-						const key = `${row},${col}`;
-						if (!used.has(key)) {
-							board[row][col] = c + 1;
-							used.add(key);
-							found = true;
-						}
-					}
-				}
-			}
-		}
-
-		if (!found) {
-			console.warn(`Character "${ch}" not found in cover text!`);
-		}
-	}
-
-	return board;
-}
-
 function decodeBoard(board, reference) {
 	let message = "";
 
@@ -231,12 +199,12 @@ function decodeBoard(board, reference) {
 	return message;
 }
 
-const coverText = `Bahwa sesungguhnya kemerdekaan itu ialah hak segala bangsa dan oleh sebab itu, maka penjajahan diatas dunia harus dihapuskan, karena tidak sesuai dengan perikemanusiaan dan perikeadilan.\nDan perjuangan pergerakan kemerdekaan Indonesia telah sampailah kepada saat yang berbahagia dengan selamat sentosa mengantarkan rakyat Indonesia ke depan pintu gerbang kemerdekaan negara Indonesia, yang merdeka, bersatu, berdaulat, adil dan makmur.\nAtas berkat rahmat Allah Yang Maha Kuasa dan dengan didorongkan oleh keinginan luhur, supaya berkehidupan kebangsaan yang bebas, maka rakyat Indonesia menyatakan dengan ini kemerdekaannya.\nKemudian daripada itu untuk membentuk suatu Pemerintah Negara Indonesia yang melindungi segenap bangsa Indonesia dan seluruh tumpah darah Indonesia dan untuk memajukan kesejahteraan umum, mencerdaskan kehidupan bangsa, dan ikut melaksanakan ketertiban dunia yang berdasarkan kemerdekaan, perdamaian abadi dan keadilan sosial, maka disusunlah Kemerdekaan Kebangsaan Indonesia itu dalam suatu Undang-Undang Dasar Negara Indonesia, yang terbentuk dalam suatu susunan Negara Republik Indonesia yang berkedaulatan rakyat dengan berdasar kepada : Ketuhanan Yang Maha Esa, kemanusiaan yang adil dan beradab, persatuan Indonesia, dan kerakyatan yang dipimpin oleh hikmat kebijaksanaan dalam permusyawaratan/perwakilan, serta dengan mewujudkan suatu keadilan sosial bagi seluruh rakyat Indonesia.`; // full UUD 1945 here
-const secret = "Steganography with Sudoku";
+const coverText = `Bahwa sesungguhnya kemerdekaan itu ialah hak segala bangsa dan oleh sebab itu, maka penjajahan diatas dunia harus dihapuskan, karena tidak sesuai dengan perikemanusiaan dan perikeadilan.\nDan perjuangan pergerakan kemerdekaan Indonesia telah sampailah kepada saat yang berbahagia dengan selamat sentosa mengantarkan rakyat Indonesia ke depan pintu gerbang kemerdekaan negara Indonesia, yang merdeka, bersatu, berdaulat, adil dan makmur.\nAtas berkat rahmat Allah Yang Maha Kuasa dan dengan didorongkan oleh keinginan luhur, supaya berkehidupan kebangsaan yang bebas, maka rakyat Indonesia menyatakan dengan ini kemerdekaannya.\nKemudian daripada itu untuk membentuk suatu Pemerintah Negara Indonesia yang melindungi segenap bangsa Indonesia dan seluruh tumpah darah Indonesia dan untuk memajukan kesejahteraan umum, mencerdaskan kehidupan bangsa, dan ikut melaksanakan ketertiban dunia yang berdasarkan kemerdekaan, perdamaian abadi dan keadilan sosial, maka disusunlah Kemerdekaan Kebangsaan Indonesia itu dalam suatu Undang-Undang Dasar Negara Indonesia, yang terbentuk dalam suatu susunan Negara Republik Indonesia yang berkedaulatan rakyat dengan berdasar kepada : Ketuhanan Yang Maha Esa, kemanusiaan yang adil dan beradab, persatuan Indonesia, dan kerakyatan yang dipimpin oleh hikmat kebijaksanaan dalam permusyawaratan/perwakilan, serta dengan mewujudkan suatu keadilan sosial bagi seluruh rakyat Indonesia.`;
+const secret = "Kelompok tiga KI";
 
 const referenceMatrix = preprocessCoverText(coverText);
 
-console.log(referenceMatrix);
+// console.log(referenceMatrix);
 
 if (!canEncode(secret, referenceMatrix)) {
 	console.error(
