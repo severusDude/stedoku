@@ -65,46 +65,60 @@ function getSudokuCoordinates(sentenceIndex, wordIndex) {
 
 function findCharacterMatches(secretText, reference) {
 	const secret = secretText.replaceAll(" ", "").toLowerCase();
-	const matches = [];
+	const matches = {};
 
 	for (const ch of secret) {
-		const characterMatches = [];
+		// Initialize array for this character if it doesn't exist
+		if (!matches[ch]) {
+			matches[ch] = [];
+		}
 
 		for (let s = 0; s < reference.length && s < 9; s++) {
 			for (let w = 0; w < reference[s].length && w < 9; w++) {
 				for (let c = 0; c < reference[s][w].length && c < 9; c++) {
 					if (ch === reference[s][w][c].toLowerCase()) {
-						characterMatches.push({ ch, s, w, c });
+						matches[ch].push({ s, w, c });
 					}
 				}
 			}
 		}
 
-		if (characterMatches.length === 0) {
+		if (matches[ch].length === 0) {
 			console.warn(`Character "${ch}" not found in cover text!`);
-			matches.push([{ ch, s: -1, w: -1, c: -1 }]);
-		} else {
-			matches.push(characterMatches);
+			matches[ch].push({ s: -1, w: -1, c: -1 });
 		}
 	}
 
-	return matches; // Returns array of arrays (matches grouped by character)
+	return matches; // Returns object with characters as keys
 }
 
-function generateSudokuFromMatches(matches) {
+function generateSudokuFromMatches(secretText, matches) {
+	const secret = secretText.replaceAll(" ", "").toLowerCase();
 	const board = Array.from({ length: 9 }, () => Array(9).fill(0));
 
+	// Convert matches object to an array of characters in secret text order
+	const secretChars = [];
+	for (const ch of secret) {
+		if (matches[ch]) {
+			secretChars.push({
+				char: ch,
+				locations: matches[ch],
+			});
+		}
+	}
+
 	// Sort characters by number of possible positions (helps with backtracking efficiency)
-	matches.sort((a, b) => a.length - b.length);
+	secretChars.sort((a, b) => a.locations.length - b.locations.length);
 
 	function backtrack(index) {
-		if (index >= matches.length) return true;
+		if (index >= secretChars.length) return true;
 
-		const charMatches = matches[index];
-		const char = charMatches[0].ch;
+		const currentChar = secretChars[index];
+		const char = currentChar.char;
+		const locations = currentChar.locations;
 
-		for (const match of charMatches) {
-			const { s, w, c } = match;
+		for (const location of locations) {
+			const { s, w, c } = location;
 			const [row, col] = getSudokuCoordinates(s, w);
 			const value = c + 1;
 
@@ -127,13 +141,13 @@ function generateSudokuFromMatches(matches) {
 		console.warn(
 			"Could not place all characters while satisfying Sudoku rules"
 		);
-		// Fill in any remaining valid placements
-		for (let i = 0; i < matches.length; i++) {
-			const charMatches = matches[i];
-			const char = charMatches[0].ch;
+		// Fill in any remaining valid placements while maintaining sequence
+		for (const currentChar of secretChars) {
+			const char = currentChar.char;
+			const locations = currentChar.locations;
 
-			for (const match of charMatches) {
-				const { s, w, c } = match;
+			for (const location of locations) {
+				const { s, w, c } = location;
 				const [row, col] = getSudokuCoordinates(s, w);
 				const value = c + 1;
 
@@ -233,7 +247,7 @@ if (!canEncode(secret, referenceMatrix)) {
 
 	console.log(matches);
 
-	const board = generateSudokuFromMatches(matches);
+	const board = generateSudokuFromMatches(secret, matches);
 	const recovered = decodeBoard(board, referenceMatrix);
 
 	console.table(board);
