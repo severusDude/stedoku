@@ -95,20 +95,33 @@ function findCharacterMatches(secretText, reference) {
 function generateSudokuFromMatches(secretText, matches) {
 	const secret = secretText.toLowerCase();
 	const board = Array.from({ length: 9 }, () => Array(9).fill(0));
+	const sequenceMap = []; // This will store the order of placements
 
 	// Convert matches object to an array of characters in secret text order
 	const secretChars = [];
 	for (const ch of secret) {
 		if (matches[ch]) {
+			// Sort the locations for this character by the number of conflicts
+			// This helps with backtracking efficiency while maintaining order
+			const sortedLocations = matches[ch]
+				.map((loc) => {
+					const [row, col] = getSudokuCoordinates(loc.s, loc.w);
+					return {
+						...loc,
+						conflicts: countConflicts(board, row, col, loc.c + 1),
+					};
+				})
+				.sort((a, b) => a.conflicts - b.conflicts);
+
 			secretChars.push({
 				char: ch,
-				locations: matches[ch],
+				locations: sortedLocations.map((loc) => {
+					const { s, w, c } = loc;
+					return { s, w, c };
+				}),
 			});
 		}
 	}
-
-	// Sort characters by number of possible positions (helps with backtracking efficiency)
-	secretChars.sort((a, b) => a.locations.length - b.locations.length);
 
 	function backtrack(index) {
 		if (index >= secretChars.length) return true;
@@ -124,13 +137,17 @@ function generateSudokuFromMatches(secretText, matches) {
 
 			if (board[row][col] === 0 && isSafe(board, row, col, value)) {
 				board[row][col] = value;
+				sequenceMap.push([row, col]); // Record the placement order
 
 				if (backtrack(index + 1)) {
 					return true;
 				}
 
+				console.log(sequenceMap);
+
 				// Backtrack - undo this placement
 				board[row][col] = 0;
+				sequenceMap.pop(); // Remove the last placement
 			}
 		}
 
@@ -153,13 +170,43 @@ function generateSudokuFromMatches(secretText, matches) {
 
 				if (board[row][col] === 0 && isSafe(board, row, col, value)) {
 					board[row][col] = value;
+					sequenceMap.push([row, col]); // Record the placement order
 					break;
 				}
 			}
 		}
 	}
 
-	return board;
+	return {
+		board: board,
+		sequenceMap: sequenceMap,
+	};
+}
+
+// Helper function to count conflicts for a potential placement
+function countConflicts(board, row, col, value) {
+	let conflicts = 0;
+
+	// Check row
+	for (let i = 0; i < 9; i++) {
+		if (board[row][i] === value) conflicts++;
+	}
+
+	// Check column
+	for (let i = 0; i < 9; i++) {
+		if (board[i][col] === value) conflicts++;
+	}
+
+	// Check 3x3 subgrid
+	const boxRow = Math.floor(row / 3) * 3;
+	const boxCol = Math.floor(col / 3) * 3;
+	for (let i = 0; i < 3; i++) {
+		for (let j = 0; j < 3; j++) {
+			if (board[boxRow + i][boxCol + j] === value) conflicts++;
+		}
+	}
+
+	return conflicts;
 }
 
 function isSafe(board, row, col, value) {
@@ -179,20 +226,19 @@ function isSafe(board, row, col, value) {
 	return true;
 }
 
-function decodeBoard(board, reference) {
+function decodeBoard(board, reference, sequenceMap) {
 	let message = "";
 
-	for (let row = 0; row < 9; row++) {
-		for (let col = 0; col < 9; col++) {
-			const value = board[row][col];
-			if (value > 0) {
-				const sentenceIndex = Math.floor(row / 3) * 3 + Math.floor(col / 3);
-				const wordIndex = (row % 3) * 3 + (col % 3);
-				const charIndex = value - 1;
+	// Decode in the order specified by sequenceMap
+	for (const [row, col] of sequenceMap) {
+		const value = board[row][col];
+		if (value > 0) {
+			const sentenceIndex = Math.floor(row / 3) * 3 + Math.floor(col / 3);
+			const wordIndex = (row % 3) * 3 + (col % 3);
+			const charIndex = value - 1;
 
-				const ch = reference[sentenceIndex][wordIndex][charIndex];
-				message += ch;
-			}
+			const ch = reference[sentenceIndex][wordIndex][charIndex];
+			message += ch;
 		}
 	}
 
@@ -200,7 +246,7 @@ function decodeBoard(board, reference) {
 }
 
 const coverText = `Bahwa sesungguhnya kemerdekaan itu ialah hak segala bangsa dan oleh sebab itu, maka penjajahan diatas dunia harus dihapuskan, karena tidak sesuai dengan perikemanusiaan dan perikeadilan.\nDan perjuangan pergerakan kemerdekaan Indonesia telah sampailah kepada saat yang berbahagia dengan selamat sentosa mengantarkan rakyat Indonesia ke depan pintu gerbang kemerdekaan negara Indonesia, yang merdeka, bersatu, berdaulat, adil dan makmur.\nAtas berkat rahmat Allah Yang Maha Kuasa dan dengan didorongkan oleh keinginan luhur, supaya berkehidupan kebangsaan yang bebas, maka rakyat Indonesia menyatakan dengan ini kemerdekaannya.\nKemudian daripada itu untuk membentuk suatu Pemerintah Negara Indonesia yang melindungi segenap bangsa Indonesia dan seluruh tumpah darah Indonesia dan untuk memajukan kesejahteraan umum, mencerdaskan kehidupan bangsa, dan ikut melaksanakan ketertiban dunia yang berdasarkan kemerdekaan, perdamaian abadi dan keadilan sosial, maka disusunlah Kemerdekaan Kebangsaan Indonesia itu dalam suatu Undang-Undang Dasar Negara Indonesia, yang terbentuk dalam suatu susunan Negara Republik Indonesia yang berkedaulatan rakyat dengan berdasar kepada : Ketuhanan Yang Maha Esa, kemanusiaan yang adil dan beradab, persatuan Indonesia, dan kerakyatan yang dipimpin oleh hikmat kebijaksanaan dalam permusyawaratan/perwakilan, serta dengan mewujudkan suatu keadilan sosial bagi seluruh rakyat Indonesia.`;
-const secret = "Kelompok tiga KI";
+const secret = "Steganography dengan sudoku";
 
 const referenceMatrix = preprocessCoverText(coverText);
 
@@ -213,10 +259,12 @@ if (!canEncode(secret, referenceMatrix)) {
 } else {
 	const matches = findCharacterMatches(secret, referenceMatrix);
 
-	console.log(matches);
+	// console.log(matches);
 
-	const board = generateSudokuFromMatches(secret, matches);
-	const recovered = decodeBoard(board, referenceMatrix);
+	const { board, sequenceMap } = generateSudokuFromMatches(secret, matches);
+	const recovered = decodeBoard(board, referenceMatrix, sequenceMap);
+
+	console.log(sequenceMap);
 
 	console.table(board);
 	console.log("Recovered secret:", recovered);
