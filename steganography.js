@@ -94,16 +94,54 @@ function findCharacterMatches(secretText, reference) {
 function generateSudokuFromMatches(matches) {
 	const board = Array.from({ length: 9 }, () => Array(9).fill(0));
 
-	for (const { s, w, c } of matches) {
-		const [row, col] = getSudokuCoordinates(s, w);
-		const value = c + 1;
+	// Sort characters by number of possible positions (helps with backtracking efficiency)
+	matches.sort((a, b) => a.length - b.length);
 
-		if (board[row][col] === 0 && isSafe(board, row, col, value)) {
-			board[row][col] = value;
-		} else {
-			console.warn(
-				`Cannot place "${value}" at [${row}, ${col}] without breaking Sudoku rules.`
-			);
+	function backtrack(index) {
+		if (index >= matches.length) return true;
+
+		const charMatches = matches[index];
+		const char = charMatches[0].ch;
+
+		for (const match of charMatches) {
+			const { s, w, c } = match;
+			const [row, col] = getSudokuCoordinates(s, w);
+			const value = c + 1;
+
+			if (board[row][col] === 0 && isSafe(board, row, col, value)) {
+				board[row][col] = value;
+
+				if (backtrack(index + 1)) {
+					return true;
+				}
+
+				// Backtrack - undo this placement
+				board[row][col] = 0;
+			}
+		}
+
+		return false;
+	}
+
+	if (!backtrack(0)) {
+		console.warn(
+			"Could not place all characters while satisfying Sudoku rules"
+		);
+		// Fill in any remaining valid placements
+		for (let i = 0; i < matches.length; i++) {
+			const charMatches = matches[i];
+			const char = charMatches[0].ch;
+
+			for (const match of charMatches) {
+				const { s, w, c } = match;
+				const [row, col] = getSudokuCoordinates(s, w);
+				const value = c + 1;
+
+				if (board[row][col] === 0 && isSafe(board, row, col, value)) {
+					board[row][col] = value;
+					break;
+				}
+			}
 		}
 	}
 
@@ -180,9 +218,11 @@ function decodeBoard(board, reference) {
 }
 
 const coverText = `Bahwa sesungguhnya kemerdekaan itu ialah hak segala bangsa dan oleh sebab itu, maka penjajahan diatas dunia harus dihapuskan, karena tidak sesuai dengan perikemanusiaan dan perikeadilan.\nDan perjuangan pergerakan kemerdekaan Indonesia telah sampailah kepada saat yang berbahagia dengan selamat sentosa mengantarkan rakyat Indonesia ke depan pintu gerbang kemerdekaan negara Indonesia, yang merdeka, bersatu, berdaulat, adil dan makmur.\nAtas berkat rahmat Allah Yang Maha Kuasa dan dengan didorongkan oleh keinginan luhur, supaya berkehidupan kebangsaan yang bebas, maka rakyat Indonesia menyatakan dengan ini kemerdekaannya.\nKemudian daripada itu untuk membentuk suatu Pemerintah Negara Indonesia yang melindungi segenap bangsa Indonesia dan seluruh tumpah darah Indonesia dan untuk memajukan kesejahteraan umum, mencerdaskan kehidupan bangsa, dan ikut melaksanakan ketertiban dunia yang berdasarkan kemerdekaan, perdamaian abadi dan keadilan sosial, maka disusunlah Kemerdekaan Kebangsaan Indonesia itu dalam suatu Undang-Undang Dasar Negara Indonesia, yang terbentuk dalam suatu susunan Negara Republik Indonesia yang berkedaulatan rakyat dengan berdasar kepada : Ketuhanan Yang Maha Esa, kemanusiaan yang adil dan beradab, persatuan Indonesia, dan kerakyatan yang dipimpin oleh hikmat kebijaksanaan dalam permusyawaratan/perwakilan, serta dengan mewujudkan suatu keadilan sosial bagi seluruh rakyat Indonesia.`; // full UUD 1945 here
-const secret = "Kelompok tiga KI";
+const secret = "Steganography with Sudoku";
 
 const referenceMatrix = preprocessCoverText(coverText);
+
+console.log(referenceMatrix);
 
 if (!canEncode(secret, referenceMatrix)) {
 	console.error(
@@ -193,9 +233,9 @@ if (!canEncode(secret, referenceMatrix)) {
 
 	console.log(matches);
 
-	// const board = generateSudokuFromMatches(matches);
-	// const recovered = decodeBoard(board, referenceMatrix);
+	const board = generateSudokuFromMatches(matches);
+	const recovered = decodeBoard(board, referenceMatrix);
 
-	// console.table(board);
-	// console.log("Recovered secret:", recovered);
+	console.table(board);
+	console.log("Recovered secret:", recovered);
 }
