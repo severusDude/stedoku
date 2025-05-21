@@ -64,29 +64,31 @@ function getSudokuCoordinates(sentenceIndex, wordIndex) {
 }
 
 function findCharacterMatches(secretText, reference) {
-	const secret = secretText.replaceAll(" ", "");
+	const secret = secretText.replaceAll(" ", "").toLowerCase();
 	const matches = [];
 
 	for (const ch of secret) {
-		let found = false;
+		const characterMatches = [];
 
-		for (let s = 0; s < 9 && !found; s++) {
-			for (let w = 0; w < 9 && !found; w++) {
-				for (let c = 0; c < 9 && !found; c++) {
-					if (ch.toLowerCase() === reference[s][w][c]) {
-						matches.push({ ch, s, w, c });
-						found = true;
+		for (let s = 0; s < reference.length && s < 9; s++) {
+			for (let w = 0; w < reference[s].length && w < 9; w++) {
+				for (let c = 0; c < reference[s][w].length && c < 9; c++) {
+					if (ch === reference[s][w][c].toLowerCase()) {
+						characterMatches.push({ ch, s, w, c });
 					}
 				}
 			}
 		}
 
-		if (!found) {
+		if (characterMatches.length === 0) {
 			console.warn(`Character "${ch}" not found in cover text!`);
+			matches.push([{ ch, s: -1, w: -1, c: -1 }]);
+		} else {
+			matches.push(characterMatches);
 		}
 	}
 
-	return matches;
+	return matches; // Returns array of arrays (matches grouped by character)
 }
 
 function generateSudokuFromMatches(matches) {
@@ -188,9 +190,12 @@ if (!canEncode(secret, referenceMatrix)) {
 	);
 } else {
 	const matches = findCharacterMatches(secret, referenceMatrix);
-	const board = generateSudokuFromMatches(matches);
-	const recovered = decodeBoard(board, referenceMatrix);
 
-	console.table(board);
-	console.log("Recovered secret:", recovered);
+	console.log(matches);
+
+	// const board = generateSudokuFromMatches(matches);
+	// const recovered = decodeBoard(board, referenceMatrix);
+
+	// console.table(board);
+	// console.log("Recovered secret:", recovered);
 }
