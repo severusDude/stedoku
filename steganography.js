@@ -9,7 +9,8 @@ function preprocessCoverText(text) {
 		const words = sentence
 			.replace(/[,]/g, "") // Remove commas
 			.split(/\s+/)
-			.slice(0, 9)
+			.filter((word) => word.length <= 9) // Filter out words longer than 9 characters
+			.slice(0, 9) // Take first 9 words (after filtering)
 			.map((word) => {
 				const padded = word.padEnd(9, "_"); // Ensure 9 characters
 				return padded.split("");
