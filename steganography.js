@@ -63,6 +63,68 @@ function getSudokuCoordinates(sentenceIndex, wordIndex) {
 	return [row, col];
 }
 
+function findCharacterMatches(secretText, reference) {
+	const secret = secretText.replaceAll(" ", "");
+	const matches = [];
+
+	for (const ch of secret) {
+		let found = false;
+
+		for (let s = 0; s < 9 && !found; s++) {
+			for (let w = 0; w < 9 && !found; w++) {
+				for (let c = 0; c < 9 && !found; c++) {
+					if (ch.toLowerCase() === reference[s][w][c]) {
+						matches.push({ ch, s, w, c });
+						found = true;
+					}
+				}
+			}
+		}
+
+		if (!found) {
+			console.warn(`Character "${ch}" not found in cover text!`);
+		}
+	}
+
+	return matches;
+}
+
+function generateSudokuFromMatches(matches) {
+	const board = Array.from({ length: 9 }, () => Array(9).fill(0));
+
+	for (const { s, w, c } of matches) {
+		const [row, col] = getSudokuCoordinates(s, w);
+		const value = c + 1;
+
+		if (board[row][col] === 0 && isSafe(board, row, col, value)) {
+			board[row][col] = value;
+		} else {
+			console.warn(
+				`Cannot place "${value}" at [${row}, ${col}] without breaking Sudoku rules.`
+			);
+		}
+	}
+
+	return board;
+}
+
+function isSafe(board, row, col, value) {
+	for (let i = 0; i < 9; i++) {
+		if (board[row][i] === value || board[i][col] === value) return false;
+	}
+
+	const boxRow = Math.floor(row / 3) * 3;
+	const boxCol = Math.floor(col / 3) * 3;
+
+	for (let r = 0; r < 3; r++) {
+		for (let c = 0; c < 3; c++) {
+			if (board[boxRow + r][boxCol + c] === value) return false;
+		}
+	}
+
+	return true;
+}
+
 function encodeSecretText(secretText, reference) {
 	const board = Array.from({ length: 9 }, () => Array(9).fill(0));
 	const used = new Set();
@@ -125,8 +187,10 @@ if (!canEncode(secret, referenceMatrix)) {
 		"Encoding aborted: Cover text does not contain all characters from the secret."
 	);
 } else {
-	const board = encodeSecretText(secret, referenceMatrix);
+	const matches = findCharacterMatches(secret, referenceMatrix);
+	const board = generateSudokuFromMatches(matches);
 	const recovered = decodeBoard(board, referenceMatrix);
-	console.log("Encoded board:", board);
+
+	console.table(board);
 	console.log("Recovered secret:", recovered);
 }
