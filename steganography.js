@@ -63,6 +63,49 @@ function getSudokuCoordinates(sentenceIndex, wordIndex) {
 	return [row, col];
 }
 
+// Helper function to count conflicts for a potential placement
+function countConflicts(board, row, col, value) {
+	let conflicts = 0;
+
+	// Check row
+	for (let i = 0; i < 9; i++) {
+		if (board[row][i] === value) conflicts++;
+	}
+
+	// Check column
+	for (let i = 0; i < 9; i++) {
+		if (board[i][col] === value) conflicts++;
+	}
+
+	// Check 3x3 subgrid
+	const boxRow = Math.floor(row / 3) * 3;
+	const boxCol = Math.floor(col / 3) * 3;
+	for (let i = 0; i < 3; i++) {
+		for (let j = 0; j < 3; j++) {
+			if (board[boxRow + i][boxCol + j] === value) conflicts++;
+		}
+	}
+
+	return conflicts;
+}
+
+function isSafe(board, row, col, value) {
+	for (let i = 0; i < 9; i++) {
+		if (board[row][i] === value || board[i][col] === value) return false;
+	}
+
+	const boxRow = Math.floor(row / 3) * 3;
+	const boxCol = Math.floor(col / 3) * 3;
+
+	for (let r = 0; r < 3; r++) {
+		for (let c = 0; c < 3; c++) {
+			if (board[boxRow + r][boxCol + c] === value) return false;
+		}
+	}
+
+	return true;
+}
+
 function findCharacterMatches(secretText, reference) {
 	const secret = secretText.replaceAll(" ", "").toLowerCase() + " ";
 	const matches = {};
@@ -181,49 +224,6 @@ function generateSudokuFromMatches(secretText, matches) {
 		board: board,
 		sequenceMap: sequenceMap,
 	};
-}
-
-// Helper function to count conflicts for a potential placement
-function countConflicts(board, row, col, value) {
-	let conflicts = 0;
-
-	// Check row
-	for (let i = 0; i < 9; i++) {
-		if (board[row][i] === value) conflicts++;
-	}
-
-	// Check column
-	for (let i = 0; i < 9; i++) {
-		if (board[i][col] === value) conflicts++;
-	}
-
-	// Check 3x3 subgrid
-	const boxRow = Math.floor(row / 3) * 3;
-	const boxCol = Math.floor(col / 3) * 3;
-	for (let i = 0; i < 3; i++) {
-		for (let j = 0; j < 3; j++) {
-			if (board[boxRow + i][boxCol + j] === value) conflicts++;
-		}
-	}
-
-	return conflicts;
-}
-
-function isSafe(board, row, col, value) {
-	for (let i = 0; i < 9; i++) {
-		if (board[row][i] === value || board[i][col] === value) return false;
-	}
-
-	const boxRow = Math.floor(row / 3) * 3;
-	const boxCol = Math.floor(col / 3) * 3;
-
-	for (let r = 0; r < 3; r++) {
-		for (let c = 0; c < 3; c++) {
-			if (board[boxRow + r][boxCol + c] === value) return false;
-		}
-	}
-
-	return true;
 }
 
 function decodeBoard(board, reference, sequenceMap) {
