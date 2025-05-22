@@ -1,5 +1,6 @@
 class SudokuSteganography {
-	constructor() {
+	constructor(nSize = 9) {
+		this.nSize = nSize;
 		this.reference = null;
 		this.board = null;
 		this.sequenceMap = null;
@@ -17,14 +18,14 @@ class SudokuSteganography {
 			.map((s) => s.trim())
 			.filter(Boolean);
 
-		const reference = sentences.slice(0, 9).map((sentence) => {
+		const reference = sentences.slice(0, this.nSize).map((sentence) => {
 			const words = sentence
 				.replace(/[,]/g, "") // Remove commas
 				.split(/\s+/)
-				.filter((word) => word.length <= 9) // Filter out words longer than 9 characters
-				.slice(0, 9) // Take first 9 words (after filtering)
+				.filter((word) => word.length <= this.nSize) // Filter out words longer than nSize characters
+				.slice(0, this.nSize) // Take first nSize words (after filtering)
 				.map((word) => {
-					const padded = word.padEnd(9, " "); // Ensure 9 characters
+					const padded = word.padEnd(this.nSize, " "); // Ensure nSize characters
 					return padded.split("");
 				});
 			return words;
@@ -80,18 +81,19 @@ class SudokuSteganography {
 
 	/**
 	 * Converts sentence and word indices to Sudoku grid coordinates
-	 * @param {number} sentenceIndex - Index of the sentence (0-8)
-	 * @param {number} wordIndex - Index of the word (0-8)
+	 * @param {number} sentenceIndex - Index of the sentence (0 to nSize-1)
+	 * @param {number} wordIndex - Index of the word (0 to nSize-1)
 	 * @returns {Array} [row, col] coordinates in the Sudoku grid
 	 */
 	getSudokuCoordinates(sentenceIndex, wordIndex) {
-		const gridRow = Math.floor(sentenceIndex / 3);
-		const gridCol = sentenceIndex % 3;
-		const cellRow = Math.floor(wordIndex / 3);
-		const cellCol = wordIndex % 3;
+		const subGridSize = Math.sqrt(this.nSize);
+		const gridRow = Math.floor(sentenceIndex / subGridSize);
+		const gridCol = sentenceIndex % subGridSize;
+		const cellRow = Math.floor(wordIndex / subGridSize);
+		const cellCol = wordIndex % subGridSize;
 
-		const row = gridRow * 3 + cellRow;
-		const col = gridCol * 3 + cellCol;
+		const row = gridRow * subGridSize + cellRow;
+		const col = gridCol * subGridSize + cellCol;
 
 		return [row, col];
 	}
@@ -108,20 +110,21 @@ class SudokuSteganography {
 		let conflicts = 0;
 
 		// Check row
-		for (let i = 0; i < 9; i++) {
+		for (let i = 0; i < this.nSize; i++) {
 			if (board[row][i] === value) conflicts++;
 		}
 
 		// Check column
-		for (let i = 0; i < 9; i++) {
+		for (let i = 0; i < this.nSize; i++) {
 			if (board[i][col] === value) conflicts++;
 		}
 
-		// Check 3x3 subgrid
-		const boxRow = Math.floor(row / 3) * 3;
-		const boxCol = Math.floor(col / 3) * 3;
-		for (let i = 0; i < 3; i++) {
-			for (let j = 0; j < 3; j++) {
+		// Check subgrid
+		const subGridSize = Math.sqrt(this.nSize);
+		const boxRow = Math.floor(row / subGridSize) * subGridSize;
+		const boxCol = Math.floor(col / subGridSize) * subGridSize;
+		for (let i = 0; i < subGridSize; i++) {
+			for (let j = 0; j < subGridSize; j++) {
 				if (board[boxRow + i][boxCol + j] === value) conflicts++;
 			}
 		}
@@ -138,15 +141,16 @@ class SudokuSteganography {
 	 * @returns {boolean} True if the placement is safe
 	 */
 	isSafe(board, row, col, value) {
-		for (let i = 0; i < 9; i++) {
+		for (let i = 0; i < this.nSize; i++) {
 			if (board[row][i] === value || board[i][col] === value) return false;
 		}
 
-		const boxRow = Math.floor(row / 3) * 3;
-		const boxCol = Math.floor(col / 3) * 3;
+		const subGridSize = Math.sqrt(this.nSize);
+		const boxRow = Math.floor(row / subGridSize) * subGridSize;
+		const boxCol = Math.floor(col / subGridSize) * subGridSize;
 
-		for (let r = 0; r < 3; r++) {
-			for (let c = 0; c < 3; c++) {
+		for (let r = 0; r < subGridSize; r++) {
+			for (let c = 0; c < subGridSize; c++) {
 				if (board[boxRow + r][boxCol + c] === value) return false;
 			}
 		}
@@ -178,9 +182,9 @@ class SudokuSteganography {
 				matches[ch] = [];
 			}
 
-			for (let s = 0; s < ref.length && s < 9; s++) {
-				for (let w = 0; w < ref[s].length && w < 9; w++) {
-					for (let c = 0; c < ref[s][w].length && c < 9; c++) {
+			for (let s = 0; s < ref.length && s < this.nSize; s++) {
+				for (let w = 0; w < ref[s].length && w < this.nSize; w++) {
+					for (let c = 0; c < ref[s][w].length && c < this.nSize; c++) {
 						if (ch === ref[s][w][c].toLowerCase()) {
 							matches[ch].push({ s, w, c });
 						}
@@ -205,7 +209,9 @@ class SudokuSteganography {
 	 */
 	generateSudokuFromMatches(secretText, matches) {
 		const secret = secretText.toLowerCase();
-		const board = Array.from({ length: 9 }, () => Array(9).fill(0));
+		const board = Array.from({ length: this.nSize }, () =>
+			Array(this.nSize).fill(0)
+		);
 		const sequenceMap = []; // This will store the order of placements
 
 		// Convert matches object to an array of characters in secret text order
@@ -322,8 +328,12 @@ class SudokuSteganography {
 		for (const [row, col] of sequence) {
 			const value = sudokuBoard[row][col];
 			if (value > 0) {
-				const sentenceIndex = Math.floor(row / 3) * 3 + Math.floor(col / 3);
-				const wordIndex = (row % 3) * 3 + (col % 3);
+				const subGridSize = Math.sqrt(this.nSize);
+				const sentenceIndex =
+					Math.floor(row / subGridSize) * subGridSize +
+					Math.floor(col / subGridSize);
+				const wordIndex =
+					(row % subGridSize) * subGridSize + (col % subGridSize);
 				const charIndex = value - 1;
 
 				const ch = ref[sentenceIndex][wordIndex][charIndex];
@@ -389,12 +399,34 @@ class SudokuSteganography {
 		this.board = null;
 		this.sequenceMap = null;
 	}
+
+	/**
+	 * Gets the current board size
+	 * @returns {number} The size of the board (nSize x nSize)
+	 */
+	getSize() {
+		return this.nSize;
+	}
+
+	/**
+	 * Sets a new board size and resets the instance
+	 * @param {number} newSize - The new board size (must be a perfect square for valid Sudoku)
+	 */
+	setSize(newSize) {
+		if (Math.sqrt(newSize) % 1 !== 0) {
+			console.warn(
+				`Warning: ${newSize} is not a perfect square. This may cause issues with Sudoku grid generation.`
+			);
+		}
+		this.nSize = newSize;
+		this.reset();
+	}
 }
 
 const coverText = `Bahwa sesungguhnya kemerdekaan itu ialah hak segala bangsa dan oleh sebab itu, maka penjajahan diatas dunia harus dihapuskan, karena tidak sesuai dengan perikemanusiaan dan perikeadilan.\nDan perjuangan pergerakan kemerdekaan Indonesia telah sampailah kepada saat yang berbahagia dengan selamat sentosa mengantarkan rakyat Indonesia ke depan pintu gerbang kemerdekaan negara Indonesia, yang merdeka, bersatu, berdaulat, adil dan makmur.\nAtas berkat rahmat Allah Yang Maha Kuasa dan dengan didorongkan oleh keinginan luhur, supaya berkehidupan kebangsaan yang bebas, maka rakyat Indonesia menyatakan dengan ini kemerdekaannya.\nKemudian daripada itu untuk membentuk suatu Pemerintah Negara Indonesia yang melindungi segenap bangsa Indonesia dan seluruh tumpah darah Indonesia dan untuk memajukan kesejahteraan umum, mencerdaskan kehidupan bangsa, dan ikut melaksanakan ketertiban dunia yang berdasarkan kemerdekaan, perdamaian abadi dan keadilan sosial, maka disusunlah Kemerdekaan Kebangsaan Indonesia itu dalam suatu Undang-Undang Dasar Negara Indonesia, yang terbentuk dalam suatu susunan Negara Republik Indonesia yang berkedaulatan rakyat dengan berdasar kepada : Ketuhanan Yang Maha Esa, kemanusiaan yang adil dan beradab, persatuan Indonesia, dan kerakyatan yang dipimpin oleh hikmat kebijaksanaan dalam permusyawaratan/perwakilan, serta dengan mewujudkan suatu keadilan sosial bagi seluruh rakyat Indonesia.`;
-const secret = "maks karakternya berapa";
+const secret = "adi berapa nih maks karakternya";
 
-const steganography = new SudokuSteganography();
+const steganography = new SudokuSteganography(25);
 
 // Encode
 const result = steganography.encode(coverText, secret);
