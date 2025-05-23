@@ -35,11 +35,11 @@ const data = {
 			items: [
 				{
 					title: "Encoding",
-					url: "/dashboard",
+					url: "/encoding",
 				},
 				{
 					title: "Decoding",
-					url: "#",
+					url: "/decoding",
 				},
 			],
 		},
@@ -53,15 +53,12 @@ export function AppSidebar({ ...props }) {
 				<a href={data.teams[0].url}>
 					<TeamSwitcher teams={data.teams} />
 				</a>
-				{/* <SidebarMenu>
-					<SidebarMenuItem>test</SidebarMenuItem>
-				</SidebarMenu> */}
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain items={data.navMain} />
 			</SidebarContent>
 			<SidebarFooter>
-				<div className="flex flex-col w-full gap-1">
+				<div className="flex flex-col w-full gap-1 p-2">
 					<span className="text-sm font-semibold">Stedoku</span>
 					<span className="text-sm font-regular">this is a test</span>
 				</div>
