@@ -470,6 +470,7 @@ function embedCoordinatesLSB(imageData, coordinates) {
 	}
 
 	return new window.ImageData(data, imageData.width, imageData.height);
+	// return new ImageData(data, imageData.width, imageData.height);
 }
 
 /**
@@ -548,12 +549,14 @@ function binaryToString(binary) {
 function loadImageData(imageSource) {
 	return new Promise((resolve, reject) => {
 		const img = new window.Image();
+		// const img = new Image();
 		img.crossOrigin = "anonymous";
 
 		img.onload = function () {
 			const canvas = document.createElement("canvas");
 			canvas.width = img.width;
 			canvas.height = img.height;
+			// const canvas = createCanvas(img.width, img.height);
 			const ctx = canvas.getContext("2d");
 			ctx.drawImage(img, 0, 0);
 			const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -580,6 +583,7 @@ function loadImageData(imageSource) {
 function saveImageData(imageData) {
 	return new Promise((resolve) => {
 		const canvas = document.createElement("canvas");
+		// const canvas = createCanvas(imageData.width, imageData.height);
 		const ctx = canvas.getContext("2d");
 
 		canvas.width = imageData.width;
@@ -589,6 +593,10 @@ function saveImageData(imageData) {
 
 		// Create download link
 		canvas.toBlob(resolve, "image/png");
+		// canvas.toBuffer((err, buffer) => {
+		// 	if (err) throw err;
+		// 	fs.writeFileSync("embed.png", buffer);
+		// });
 	});
 }
 

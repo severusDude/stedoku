@@ -68,34 +68,27 @@ function Encoding() {
 	const handleEncode = async () => {
 		const result = await encodeMessage(coverText, secretText, selectedImage);
 
-		// console.log(result.modifiedImage);
-		// console.log(typeof result.modifiedImage);
-		// const imageURL = URL.createObjectURL(result.modifiedImage);
-
-		// const response = await
-		// const blob = await response.blob();
-		// const imageURL = URL.createObjectURL(blob);
-
 		const image = await result.modifiedImage;
 		const imageURL = URL.createObjectURL(image);
+		console.log(imageURL);
 
 		setEncodedImage(imageURL);
+		console.log(encodedImage);
 		setGrid(result.board);
 
 		setIsEncoded(true);
 	};
 
 	const handleDownload = () => {
-		if (!selectedImage) return;
+		console.log(encodedImage);
+		if (!encodedImage) return;
 
-		const url = URL.createObjectURL(selectedImage);
 		const link = document.createElement("a");
-		link.href = url;
-		link.download = selectedImage.name || "embed.png";
+		link.href = encodedImage;
+		link.download = encodedImage.name || "embed.png";
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
-		URL.revokeObjectURL(url);
 	};
 
 	const handleCopyArray = () => {
