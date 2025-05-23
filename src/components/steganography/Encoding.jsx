@@ -3,8 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Upload, X } from "lucide-react";
+import { Card, CardTitle, CardHeader, CardContent } from "@/components/ui/card";
+import { Upload, X, Download, Copy } from "lucide-react";
+import SudokuGrid from "@/components/ui/sudoku";
 
 function Encoding() {
 	const [secretText, setSecretText] = useState("");
@@ -12,6 +13,9 @@ function Encoding() {
 	const [selectedImage, setSelectedImage] = useState(null);
 	const [imagePreview, setImagePreview] = useState(null);
 	const [isDragOver, setIsDragOver] = useState(false);
+	const [grid, setGrid] = useState([]);
+	const [isEncoded, setIsEncoded] = useState(false);
+	const [encodedImage, setEncodedImage] = useState(null);
 	const fileInputRef = useRef(null);
 
 	const handleImageUpload = (file) => {
@@ -52,6 +56,9 @@ function Encoding() {
 		setCoverText("");
 		setSelectedImage(null);
 		setImagePreview(null);
+		setIsEncoded(false);
+		setEncodedImage(null);
+		setGrid([]);
 		if (fileInputRef.current) {
 			fileInputRef.current.value = "";
 		}
@@ -59,7 +66,42 @@ function Encoding() {
 
 	const handleEncode = () => {
 		// Encoding logic would go here
-		console.log("Encoding with:", { secretText, coverText, selectedImage });
+		// console.log("Encoding with:", { secretText, coverText, selectedImage });
+		// Mock encoded image (using the original image for demo)
+		setEncodedImage(imagePreview);
+
+		// Mock sudoku grid generation
+		const mockGrid = [
+			[5, 3, 0, 0, 7, 0, 0, 0, 0],
+			[6, 0, 0, 1, 9, 5, 0, 0, 0],
+			[0, 9, 8, 0, 0, 0, 0, 6, 0],
+			[8, 0, 0, 0, 6, 0, 0, 0, 3],
+			[4, 0, 0, 8, 0, 3, 0, 0, 1],
+			[7, 0, 0, 0, 2, 0, 0, 0, 6],
+			[0, 6, 0, 0, 0, 0, 2, 8, 0],
+			[0, 0, 0, 4, 1, 9, 0, 0, 5],
+			[0, 0, 0, 0, 8, 0, 0, 7, 9],
+		];
+		setGrid(mockGrid);
+
+		setIsEncoded(true);
+	};
+
+	const handleDownload = () => {
+		// Download functionality
+		console.log("Downloading encoded image");
+	};
+
+	const handleCopyArray = () => {
+		// Copy grid as array to clipboard
+		navigator.clipboard.writeText(JSON.stringify(grid));
+		console.log("Grid copied to clipboard");
+	};
+
+	const handleRestart = () => {
+		setIsEncoded(false);
+		setEncodedImage(null);
+		setGrid([]);
 	};
 
 	const removeImage = () => {
@@ -71,123 +113,165 @@ function Encoding() {
 	};
 
 	return (
-		<div className="min-h-screen">
-			<div className="max-w-2xl mx-auto my-6">
+		<div className="min-h-screen bg-background p-6">
+			<div className="max-w-4xl mx-auto">
 				<div className="text-center mb-8">
-					<h1 className="text-3xl font-bold text-gray-900 mb-2">
-						Text Encoding
-					</h1>
-					<p className="text-gray-600">
+					<h1 className="text-3xl font-bold mb-2">Text Encoding</h1>
+					<p className="text-muted-foreground">
 						Hide your secret message within cover text and images
 					</p>
 				</div>
 
-				<Card className="border-1 backdrop-blur-sm">
-					<CardContent className="p-8 space-y-6">
-						{/* Secret Text Input */}
-						<div className="space-y-2">
-							<Label
-								htmlFor="secret-text"
-								className="text-sm font-medium text-gray-700"
-							>
-								Secret Text
-							</Label>
-							<Input
-								id="secret-text"
-								type="text"
-								placeholder="Input your secret text here"
-								value={secretText}
-								onChange={(e) => setSecretText(e.target.value)}
-								className="w-full"
-							/>
-						</div>
+				{/* Input Section */}
+				{!isEncoded && (
+					<Card>
+						<CardHeader>
+							<CardTitle>Input</CardTitle>
+						</CardHeader>
+						<CardContent className="space-y-6">
+							{/* Secret Text Input */}
+							<div className="space-y-2">
+								<Label htmlFor="secret-text">Secret Text</Label>
+								<Input
+									id="secret-text"
+									type="text"
+									placeholder="Input your secret text here"
+									value={secretText}
+									onChange={(e) => setSecretText(e.target.value)}
+								/>
+							</div>
 
-						{/* Cover Text Textarea */}
-						<div className="space-y-2">
-							<Label
-								htmlFor="cover-text"
-								className="text-sm font-medium text-gray-700"
-							>
-								Cover Text
-							</Label>
-							<Textarea
-								id="cover-text"
-								placeholder="Input your cover text here"
-								value={coverText}
-								onChange={(e) => setCoverText(e.target.value)}
-								className="w-full min-h-[120px] resize-none"
-							/>
-						</div>
+							{/* Cover Text Textarea */}
+							<div className="space-y-2">
+								<Label htmlFor="cover-text">Cover Text</Label>
+								<Textarea
+									id="cover-text"
+									placeholder="Input your cover text here"
+									value={coverText}
+									onChange={(e) => setCoverText(e.target.value)}
+									className="min-h-[120px] resize-none"
+								/>
+							</div>
 
-						{/* Image Upload */}
-						<div className="space-y-2">
-							<Label className="text-sm font-medium text-gray-700">
-								Drop your image here
-							</Label>
-							<p className="text-xs text-gray-500 mb-3">PNG and JPG support</p>
+							{/* Image Upload */}
+							<div className="space-y-2">
+								<Label>Drop your image here</Label>
+								<p className="text-sm text-muted-foreground">
+									PNG and JPG support
+								</p>
 
-							{imagePreview ? (
-								<div className="relative">
-									<img
-										src={imagePreview}
-										alt="Preview"
-										className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
-									/>
-									<Button
-										variant="destructive"
-										size="sm"
-										className="absolute top-2 right-2"
-										onClick={removeImage}
+								{imagePreview ? (
+									<div className="relative">
+										<img
+											src={imagePreview}
+											alt="Preview"
+											className="w-full h-48 object-cover rounded-lg border"
+										/>
+										<Button
+											variant="destructive"
+											size="sm"
+											className="absolute top-2 right-2"
+											onClick={removeImage}
+										>
+											<X className="h-4 w-4" />
+										</Button>
+									</div>
+								) : (
+									<div
+										className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+											isDragOver
+												? "border-primary bg-primary/10"
+												: "border-muted-foreground/25 hover:border-muted-foreground/50"
+										}`}
+										onDrop={handleDrop}
+										onDragOver={handleDragOver}
+										onDragLeave={handleDragLeave}
+										onClick={() => fileInputRef.current?.click()}
 									>
-										<X className="h-4 w-4" />
+										<Upload className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+										<p className="text-muted-foreground mb-2">
+											Drag and drop your image here, or click to select
+										</p>
+										<p className="text-sm text-muted-foreground">
+											Supports PNG and JPG files
+										</p>
+									</div>
+								)}
+
+								<input
+									ref={fileInputRef}
+									type="file"
+									accept="image/png,image/jpeg"
+									onChange={handleFileSelect}
+									className="hidden"
+								/>
+							</div>
+
+							{/* Action Buttons */}
+							<div className="flex gap-4 pt-4">
+								<Button onClick={handleEncode} className="flex-1">
+									Encode
+								</Button>
+								<Button
+									variant="outline"
+									onClick={handleReset}
+									className="flex-1"
+								>
+									Reset
+								</Button>
+							</div>
+						</CardContent>
+					</Card>
+				)}
+
+				{/* Output Section */}
+				{isEncoded && (
+					<div className="space-y-6">
+						<Card>
+							<CardHeader>
+								<CardTitle>Output</CardTitle>
+							</CardHeader>
+							<CardContent className="space-y-6">
+								{/* Encoded Image */}
+								<div className="space-y-4">
+									<Label>Image</Label>
+									{encodedImage && (
+										<div className="space-y-4">
+											<img
+												src={encodedImage}
+												alt="Encoded"
+												className="w-full h-48 object-cover rounded-lg border"
+											/>
+											<Button onClick={handleDownload} className="w-full">
+												<Download className="h-4 w-4 mr-2" />
+												Download
+											</Button>
+										</div>
+									)}
+								</div>
+
+								{/* Sudoku Grid */}
+								<div className="space-y-4">
+									<Label>Sudoku Grid</Label>
+									<SudokuGrid grid={grid} size={grid.length} />
+									<Button onClick={handleCopyArray} className="w-full">
+										<Copy className="h-4 w-4 mr-2" />
+										Copy as Array
 									</Button>
 								</div>
-							) : (
-								<div
-									className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
-										isDragOver
-											? "border-blue-400 bg-blue-50"
-											: "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
-									}`}
-									onDrop={handleDrop}
-									onDragOver={handleDragOver}
-									onDragLeave={handleDragLeave}
-									onClick={() => fileInputRef.current?.click()}
+
+								{/* Action Button */}
+								<Button
+									variant="secondary"
+									onClick={handleRestart}
+									className="w-full"
 								>
-									<Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-									<p className="text-gray-600 mb-2">
-										Drag and drop your image here, or click to select
-									</p>
-									<p className="text-xs text-gray-500">
-										Supports PNG and JPG files
-									</p>
-								</div>
-							)}
-
-							<input
-								ref={fileInputRef}
-								type="file"
-								accept="image/png,image/jpeg"
-								onChange={handleFileSelect}
-								className="hidden"
-							/>
-						</div>
-
-						{/* Action Buttons */}
-						<div className="flex gap-4 pt-4">
-							<Button onClick={handleEncode} className="flex-1">
-								Encode
-							</Button>
-							<Button
-								variant="outline"
-								onClick={handleReset}
-								className="flex-1"
-							>
-								Reset
-							</Button>
-						</div>
-					</CardContent>
-				</Card>
+									Restart
+								</Button>
+							</CardContent>
+						</Card>
+					</div>
+				)}
 			</div>
 		</div>
 	);
