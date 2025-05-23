@@ -86,8 +86,16 @@ function Encoding() {
 	};
 
 	const handleDownload = () => {
-		// Download functionality
-		// selectedImage
+		if (!selectedImage) return;
+
+		const url = URL.createObjectURL(selectedImage);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = selectedImage.name || "embed.png";
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
 	};
 
 	const handleCopyArray = () => {
