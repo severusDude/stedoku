@@ -8,14 +8,16 @@ function App() {
 	return (
 		<SidebarProvider>
 			<AppSidebar />
-			<SidebarInset>
-				<Router>
-					<Routes>
-						<Route path="/" element={<Home />} />
-						<Route path="/dashboard" element={<Dashboard />} />
-					</Routes>
-				</Router>
-			</SidebarInset>
+			<div className="p-4 w-screen h-screen">
+				<SidebarInset>
+					<Router>
+						<Routes>
+							<Route path="/" element={<Home />} />
+							<Route path="/dashboard" element={<Dashboard />} />
+						</Routes>
+					</Router>
+				</SidebarInset>
+			</div>
 		</SidebarProvider>
 	);
 }

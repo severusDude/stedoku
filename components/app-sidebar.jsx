@@ -10,7 +10,6 @@ import {
 	SidebarHeader,
 	SidebarRail,
 } from "@/components/ui/sidebar";
-import { Link } from "react-router-dom";
 
 // This is sample data.
 const data = {
@@ -24,6 +23,7 @@ const data = {
 			name: "Stedoku",
 			logo: GalleryVerticalEnd,
 			plan: "Kelompok 3",
+			url: "/",
 		},
 	],
 	navMain: [
@@ -50,14 +50,22 @@ export function AppSidebar({ ...props }) {
 	return (
 		<Sidebar collapsible="icon" {...props}>
 			<SidebarHeader>
-				<TeamSwitcher teams={data.teams} />
+				<a href={data.teams[0].url}>
+					<TeamSwitcher teams={data.teams} />
+				</a>
+				{/* <SidebarMenu>
+					<SidebarMenuItem>test</SidebarMenuItem>
+				</SidebarMenu> */}
 			</SidebarHeader>
 			<SidebarContent>
 				<NavMain items={data.navMain} />
 			</SidebarContent>
-			{/* <SidebarFooter>
-				<NavUser user={data.user} />
-			</SidebarFooter> */}
+			<SidebarFooter>
+				<div className="flex flex-col w-full gap-1">
+					<span className="text-sm font-semibold">Stedoku</span>
+					<span className="text-sm font-regular">this is a test</span>
+				</div>
+			</SidebarFooter>
 			<SidebarRail />
 		</Sidebar>
 	);
