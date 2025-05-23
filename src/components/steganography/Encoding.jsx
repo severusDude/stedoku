@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardTitle, CardHeader, CardContent } from "@/components/ui/card";
 import { Upload, X, Download, Copy } from "lucide-react";
 import SudokuGrid from "@/components/ui/sudoku";
+import { encodeMessage } from "../../../utils/steganography";
 
 function Encoding() {
 	const [secretText, setSecretText] = useState("");
@@ -64,32 +65,29 @@ function Encoding() {
 		}
 	};
 
-	const handleEncode = () => {
-		// Encoding logic would go here
-		// console.log("Encoding with:", { secretText, coverText, selectedImage });
-		// Mock encoded image (using the original image for demo)
-		setEncodedImage(imagePreview);
+	const handleEncode = async () => {
+		const result = await encodeMessage(coverText, secretText, selectedImage);
 
-		// Mock sudoku grid generation
-		const mockGrid = [
-			[5, 3, 0, 0, 7, 0, 0, 0, 0],
-			[6, 0, 0, 1, 9, 5, 0, 0, 0],
-			[0, 9, 8, 0, 0, 0, 0, 6, 0],
-			[8, 0, 0, 0, 6, 0, 0, 0, 3],
-			[4, 0, 0, 8, 0, 3, 0, 0, 1],
-			[7, 0, 0, 0, 2, 0, 0, 0, 6],
-			[0, 6, 0, 0, 0, 0, 2, 8, 0],
-			[0, 0, 0, 4, 1, 9, 0, 0, 5],
-			[0, 0, 0, 0, 8, 0, 0, 7, 9],
-		];
-		setGrid(mockGrid);
+		// console.log(result.modifiedImage);
+		// console.log(typeof result.modifiedImage);
+		// const imageURL = URL.createObjectURL(result.modifiedImage);
+
+		// const response = await
+		// const blob = await response.blob();
+		// const imageURL = URL.createObjectURL(blob);
+
+		const image = await result.modifiedImage;
+		const imageURL = URL.createObjectURL(image);
+
+		setEncodedImage(imageURL);
+		setGrid(result.board);
 
 		setIsEncoded(true);
 	};
 
 	const handleDownload = () => {
 		// Download functionality
-		console.log("Downloading encoded image");
+		// selectedImage
 	};
 
 	const handleCopyArray = () => {

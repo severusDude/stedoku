@@ -1,5 +1,5 @@
 import { Image, ImageData, createCanvas } from "canvas";
-import fs from "fs";
+// import fs from "fs";
 
 class SudokuSteganography {
 	constructor(nSize = 9) {
@@ -469,7 +469,7 @@ function embedCoordinatesLSB(imageData, coordinates) {
 		bitIndex++;
 	}
 
-	return new ImageData(data, imageData.width, imageData.height);
+	return new window.ImageData(data, imageData.width, imageData.height);
 }
 
 /**
@@ -545,41 +545,50 @@ function binaryToString(binary) {
  * @param {string} imagePath - Path to image file
  * @returns {Promise<ImageData>} Promise resolving to ImageData
  */
-function loadImageData(imagePath) {
+function loadImageData(imageSource) {
 	return new Promise((resolve, reject) => {
-		const img = new Image();
+		const img = new window.Image();
 		img.crossOrigin = "anonymous";
 
 		img.onload = function () {
-			const canvas = createCanvas(img.width, img.height);
+			const canvas = document.createElement("canvas");
+			canvas.width = img.width;
+			canvas.height = img.height;
 			const ctx = canvas.getContext("2d");
-
 			ctx.drawImage(img, 0, 0);
 			const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
 			resolve(imageData);
 		};
 
 		img.onerror = reject;
-		img.src = imagePath;
+
+		// Handle Blob/File or URL
+		if (imageSource instanceof Blob) {
+			img.src = URL.createObjectURL(imageSource);
+		} else if (typeof imageSource === "string") {
+			img.src = imageSource;
+		} else {
+			reject(new Error("Unsupported image source type"));
+		}
 	});
 }
 
 /**
  * Helper function to save ImageData as downloadable image
  * @param {ImageData} imageData - Modified ImageData
- * @param {string} filename - Output filename
  */
-function saveImageData(imageData, filename = "embedded_image.png") {
-	const canvas = createCanvas(imageData.width, imageData.height);
-	const ctx = canvas.getContext("2d");
+function saveImageData(imageData) {
+	return new Promise((resolve) => {
+		const canvas = document.createElement("canvas");
+		const ctx = canvas.getContext("2d");
 
-	ctx.putImageData(imageData, 0, 0);
+		canvas.width = imageData.width;
+		canvas.height = imageData.height;
 
-	// Create download link
-	canvas.toBuffer((err, buffer) => {
-		if (err) throw err;
-		fs.writeFileSync(filename, buffer);
+		ctx.putImageData(imageData, 0, 0);
+
+		// Create download link
+		canvas.toBlob(resolve, "image/png");
 	});
 }
 
@@ -588,17 +597,17 @@ function saveImageData(imageData, filename = "embedded_image.png") {
 
 // const steganography = new SudokuSteganography(9);
 
-// Encode
+// // Encode
 // const result = steganography.encode(coverText, secret);
 // if (result.success) {
 // 	console.log("Encoding successful!");
 // 	console.log("Board:", result.board);
-// 	loadImageData("images/freya.png").then((imageData) => {
+// 	loadImageData("image.png").then((imageData) => {
 // 		const modifiedImageData = embedCoordinatesLSB(
 // 			imageData,
 // 			result.sequenceMap
 // 		);
-// 		saveImageData(modifiedImageData, "image_with_coordinates.png");
+// 		saveImageData(modifiedImageData, "embed.png");
 // 		return modifiedImageData;
 // 	});
 // }
@@ -615,7 +624,7 @@ function saveImageData(imageData, filename = "embedded_image.png") {
 // 	[0, 0, 0, 0, 0, 0, 0, 0, 0],
 // ];
 // // Decode
-// loadImageData("image_with_coordinates.png").then((imageData) => {
+// loadImageData("image.png").then((imageData) => {
 // 	const decode = new SudokuSteganography(board.length);
 // 	const reference = decode.preprocessCoverText(coverText);
 // 	const sequenceMap = extractCoordinatesLSB(imageData);
@@ -623,3 +632,34 @@ function saveImageData(imageData, filename = "embedded_image.png") {
 // 	const decodedMessage = decode.decode(board, reference, sequenceMap);
 // 	console.log("Decoded:", decodedMessage);
 // });
+
+export async function encodeMessage(coverText, secretText, image) {
+	const steganography = new SudokuSteganography(9);
+
+	const result = steganography.encode(coverText, secretText);
+	if (!result.success) {
+		throw new Error("Encoding failed");
+	}
+
+	const imageData = await loadImageData(image);
+	const modifiedImageData = embedCoordinatesLSB(imageData, result.sequenceMap);
+
+	// Optional: Save the modified image
+	const modifiedImage = saveImageData(modifiedImageData);
+
+	return {
+		board: result.board,
+		sequenceMap: result.sequenceMap,
+		modifiedImage,
+	};
+}
+
+export async function decodeMessage(coverText, image, board) {
+	const decode = new SudokuSteganography(board.length);
+	const reference = decode.preprocessCoverText(coverText);
+	const imageData = await loadImageData(image);
+	const sequenceMap = extractCoordinatesLSB(imageData);
+	const decodedMessage = decode.decode(board, reference, sequenceMap);
+
+	return decodedMessage;
+}
